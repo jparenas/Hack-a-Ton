@@ -12,6 +12,5 @@ def add_header(response):
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
     return response
 
-
 # Import resources to ensure view is registered
 from .resources import * # NOQA
