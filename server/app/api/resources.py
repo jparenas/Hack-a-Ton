@@ -197,12 +197,15 @@ class CityLikeResource(Resource):
         like = True if data['like'] else False
 
         db_cursor.execute("SELECT last_query FROM USERS WHERE uuid=?", (data['uuid'],))
-        query_id = db_cursor.fetchone()[0]
-        db_cursor.execute("UPDATE PLAN SET like=? WHERE query_id=? AND destination=?", (like, query_id, data['destination']))
+        query_id = db_cursor.fetchone()
+        if query_id:
+            db_cursor.execute("UPDATE PLAN SET like=? WHERE query_id=? AND destination=?", (like, query_id[0], data['destination']))
 
-        db_connection.commit()
-        
-        return {}, 400
+            db_connection.commit()
+            
+            return {}, 200
+        else:
+            return {'error': 'User does not exist', 'status': 404}, 404
 
 @api_rest.route('/retrieve_previous_search')
 @api_rest.param('uuid', 'UUID of the user')
