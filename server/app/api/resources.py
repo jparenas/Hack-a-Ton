@@ -74,7 +74,7 @@ class FlightResource(Resource):
         except NotFoundError:
             return {'flights': []}
         except ServerError:
-            return {'error':500, 'status':'Server Error', 'message':'Probably the city does not exist'}
+            return {'error': 500, 'status' : 'Server Error', 'message':'Probably the city does not exist'}
 
         result = []
         for flight in flights['data']:
@@ -117,10 +117,21 @@ class FlightResource(Resource):
         return {'flights': result}
 
 @api_rest.route('/like_place')
+@api_rest.param('places', 'list of places that a user interacted with')
+@api_rest.param('likes', 'the user action to listed places')
 class CityLikeResource(Resource):
     """ Unsecure Resource Class: Inherit from Resource """
     def put(self):
-        pass
+        arguments = {}
+        if not request.args.get('places'):
+            return Response(jsonify({'error': 'places are not selected', 'status': 400}), status=400,
+                            mimetype='application/json')
+        arguments['places'] = request.args.get('places')
+        if not request.args.get('likes'):
+            return Response(jsonify({'error': 'likes are not selected', 'status': 400}), status=400,
+                            mimetype='application/json')
+        arguments['likes'] = request.args.get('likes')
+        return arguments
 
 @api_rest.route('/secure-resource/<string:resource_id>')
 class SecureResourceOne(SecureResource):
