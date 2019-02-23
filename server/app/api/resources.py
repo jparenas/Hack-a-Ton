@@ -182,6 +182,7 @@ class FlightResource(Resource):
         db_connection.commit()
         return {'flights': result}
 
+
 @api_rest.route('/like_place')
 class CityLikeResource(Resource):
     def post(self):
@@ -242,11 +243,31 @@ class PreviousSearchResource(Resource):
             }
             return result, 404
 
-"""
-@api_rest.route('/secure-resource/<string:resource_id>')
-class SecureResourceOne(SecureResource):
+@api_rest.route('/get_tickets')
+@api_rest.param('returnDate', 'the date of arrival')
+@api_rest.param('departureDate', 'the date of departure')
+@api_rest.param('destination', 'the destination')
+@api_rest.param('origin', 'the origin')
+class TicketResource(Resource):
+    def get(self):
+        arguments = {}
+        arguments['origin'] = request.args.get('origin')
+        arguments['destination'] = request.args.get('destination')
+        arguments['departureDate'] = request.args.get('departureDate')
+        arguments['returnDate'] = request.args.get('returnDate')
 
-    def get(self, resource_id):
-        timestamp = datetime.utcnow().isoformat()
-        return {'timestamp': timestamp}
-"""
+        try:
+            flights = amadeus.shopping.flight_offers.get(**arguments).result
+            status_code = 200
+        except NotFoundError:
+            return {'flights': []}
+            status_code = 201
+        except ServerError:
+            return {'error': 500, 'status': 'Server Error', 'message': 'Probably the city does not exist'}
+            status_code = 500
+        extracted_flight_list = []
+        for offer_item in flights['data']:
+            price = float(offer_item['offerItems'][0]['price']['total']) + float(offer_item['offerItems'][0]['price']['totalTaxes'])
+            extracted_flight_list.append(price)
+        print(extracted_flight_list)
+        return extracted_flight_list
