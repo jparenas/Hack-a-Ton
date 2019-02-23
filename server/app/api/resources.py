@@ -22,7 +22,7 @@ amadeus = Client(
     #log_level='debug'
 )
 
-cache_timeout = os.getenv('CACHE_TIMEOUT', 20)
+cache_timeout = os.getenv('CACHE_TIMEOUT', 30)
 
 db_connection, db_cursor = get_database()
 
@@ -112,15 +112,17 @@ class FlightResource(Resource):
             query_id = int(random.getrandbits(256)) % (2 << 63 - 1)
             db_cursor.execute("INSERT INTO QUERIES VALUES(?,?,strftime('%Y-%m-%d %H-%M-%S','now'),?,?)", (query_id, uuid, status_code, arguments_hash))
             db_cursor.execute("INSERT OR IGNORE INTO USERS (uuid, last_query) VALUES (?,?)", (uuid, query_id))
-            db_cursor.execute("UPDATE USERS SET last_query = ? WHERE uuid=?", (query_id, uuid))
+            db_cursor.execute("UPDATE USERS SET last_query=? WHERE uuid=?", (query_id, uuid))
 
             for flight in flights['data']:
-                db_cursor.execute('INSERT INTO PLAN VALUES(?,?,?,?,?,?)', (
+                db_cursor.execute('INSERT INTO PLAN VALUES(?,?,?,?,?,?,?,?)', (
                     flight['departureDate'],
                     flight['returnDate'],
                     flight['origin'],
                     flight['destination'],
                     flight['price']['total'],
+                    flight['links']['flightOffers'],
+                    None,
                     query_id,
                     ))
                 db_cursor.execute('SELECT image FROM CITIES WHERE iata_name=?', (flight['destination'],))
@@ -156,32 +158,41 @@ class FlightResource(Resource):
 
                 flight['image'] = image_url
                 del flight['type']
+                del flight['links']
                 result.append(flight)
 
         db_connection.commit()
         return {'flights': result}
 
 @api_rest.route('/like_place')
-@api_rest.param('places', 'list of places that a user interacted with')
-@api_rest.param('likes', 'the user action to listed places')
 class CityLikeResource(Resource):
-    """ Unsecure Resource Class: Inherit from Resource """
-    def put(self):
-        arguments = {}
-        if not request.args.get('places'):
-            return Response(jsonify({'error': 'places are not selected', 'status': 400}), status=400,
+    def post(self):
+        data = request.json if request.json else request.form
+        print(data)
+        print(request.json)
+        if 'uuid' not in data:
+            return Response(jsonify({'error':'UUID is obligatory', 'status':400}), status=400, mimetype='application/json')
+        if 'destination' not in data:
+            return Response(jsonify({'error': 'destination is required', 'status': 400}), status=400,
                             mimetype='application/json')
-        arguments['places'] = request.args.get('places')
-        if not request.args.get('likes'):
-            return Response(jsonify({'error': 'likes are not selected', 'status': 400}), status=400,
+        if 'like' not in data:
+            return Response(jsonify({'error': 'like status is required', 'status': 400}), status=400,
                             mimetype='application/json')
-        arguments['likes'] = request.args.get('likes')
-        return arguments
+        like = True if data['like'] else False
 
+        db_cursor.execute("SELECT last_query FROM USERS WHERE uuid=?", (data['uuid'],))
+        query_id = db_cursor.fetchone()[0]
+        db_cursor.execute("UPDATE PLAN SET like=? WHERE query_id=? AND destination=?", (like, query_id, data['destination']))
+
+        db_connection.commit()
+        
+        return {}, 400
+
+"""
 @api_rest.route('/secure-resource/<string:resource_id>')
 class SecureResourceOne(SecureResource):
-    """ Unsecure Resource Class: Inherit from Resource """
 
     def get(self, resource_id):
         timestamp = datetime.utcnow().isoformat()
         return {'timestamp': timestamp}
+"""
