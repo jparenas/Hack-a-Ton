@@ -2,27 +2,23 @@ import os
 import json
 import re
 import datetime
+import requests
 
 from amadeus import Client, Location, ResponseError, NotFoundError, ServerError
-
-from pyairports.airports import Airports
 
 from datetime import datetime
 from flask import request, Response, jsonify
 from flask_restplus import Resource
 
 from .security import require_auth
+from .database import get_database
 from . import api_rest
-
-import requests
 
 amadeus = Client(
     client_id=os.getenv('AMADEUS_API_KEY'),
     client_secret=os.getenv('AMADEUS_SECRET_KEY'),
     #log_level='debug'
 )
-
-airports = Airports()
 
 iata_to_cityname = {}
 cityname_to_picture = {}
