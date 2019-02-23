@@ -1,35 +1,29 @@
 # Hack-a-Ton
 
 ## Project setup
-```
-npm install
-```
+	npm install
 
 ### Compiles and hot-reloads for development
-```
-npm run serve
-```
+	npm run serve
 
 ### Compiles and minifies for production
-```
-npm run build
-```
+	npm run build
 
 ### Run your tests
-```
-npm run test
-```
+	npm run test
 
 ### Lints and fixes files
-```
-npm run lint
-```
+	npm run lint
 
 ### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+See [Configuration Reference][1].
 
 ### API key
 Create .env file in ./Hack-a-Ton/server and set the value for these API keys.
-GOOGLE_API_KEY=YOUR_KEY
-AMADEUS_API_KEY=YOUR_KEY
-AMADEUS_SECRET_KEY=YOUR_KEY
+
+GOOGLE\_API\_KEY=YOUR\_KEY
+
+AMADEUS\_API\_KEY=YOUR\_KEY
+
+AMADEUS\_SECRET\_KEY=YOUR\_KEY
+
