@@ -22,7 +22,7 @@ amadeus = Client(
     #log_level='debug'
 )
 
-cache_timeout = os.getenv('CACHE_TIMEOUT', 1000)
+cache_timeout = os.getenv('CACHE_TIMEOUT', 20)
 
 db_connection, db_cursor = get_database()
 
@@ -162,10 +162,21 @@ class FlightResource(Resource):
         return {'flights': result}
 
 @api_rest.route('/like_place')
+@api_rest.param('places', 'list of places that a user interacted with')
+@api_rest.param('likes', 'the user action to listed places')
 class CityLikeResource(Resource):
     """ Unsecure Resource Class: Inherit from Resource """
     def put(self):
-        pass
+        arguments = {}
+        if not request.args.get('places'):
+            return Response(jsonify({'error': 'places are not selected', 'status': 400}), status=400,
+                            mimetype='application/json')
+        arguments['places'] = request.args.get('places')
+        if not request.args.get('likes'):
+            return Response(jsonify({'error': 'likes are not selected', 'status': 400}), status=400,
+                            mimetype='application/json')
+        arguments['likes'] = request.args.get('likes')
+        return arguments
 
 @api_rest.route('/secure-resource/<string:resource_id>')
 class SecureResourceOne(SecureResource):
