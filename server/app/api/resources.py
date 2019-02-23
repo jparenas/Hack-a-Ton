@@ -36,9 +36,9 @@ class FlightResource(Resource):
     def get(self):
         flights = amadeus.shopping.flight_destinations.get(
             origin=request.args.get('origin'), 
-            maxPrice=request.args.get('budget'), 
-            departureDate='2019-05-25', 
-            duration=5,
+            maxPrice=float(request.args.get('budget')), 
+            departureDate=request.args.get('start_date'), 
+            duration=int(request.args.get('end_date')),
             currency='USD'
         ).result
         result = []
