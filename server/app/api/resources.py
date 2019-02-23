@@ -47,10 +47,10 @@ class FlightResource(Resource):
         arguments = {'currency': 'USD'}
 
         if not request.args.get('origin'):
-            return Response(jsonify({'error':'Origin city is obligatory', 'status':400}), status=400, mimetype='application/json')
+            return {'error':'Origin city is obligatory', 'status':400}, 400
 
         if not request.args.get('uuid'):
-            return Response(jsonify({'error':'UUID is obligatory', 'status':400}), status=400, mimetype='application/json')
+            return {'error':'UUID is obligatory', 'status':400}, 400
 
         arguments['origin'] = request.args.get('origin')
         uuid = request.args.get('uuid')
@@ -60,18 +60,18 @@ class FlightResource(Resource):
 
         if request.args.get('start_date'):
             if not check_date(request.args.get('start_date')):
-                return Response(jsonify({'error':'Start date is not using the right format', 'status':400}), status=400, mimetype='application/json')
+                return {'error':'Start date is not using the right format', 'status':400}, 400
             arguments['departureDate'] = request.args.get('start_date')
 
         if request.args.get('end_date') and request.args.get('start_date'):
             if not check_date(request.args.get('end_date')):
-                return Response(jsonify({'error':'End date is not using the right format', 'status':400}), status=400, mimetype='application/json')
+                return {'error':'End date is not using the right format', 'status':400}, 400
 
             start_date = datetime.strptime(request.args.get('start_date'), '%Y-%m-%d').date()
             end_date = datetime.strptime(request.args.get('end_date'), '%Y-%m-%d').date()
 
             if start_date > end_date:
-                return Response(jsonify({'error':'End date is earlier than the start day', 'status':400}), status=400, mimetype='application/json')
+                return {'error':'End date is earlier than the start day', 'status':400}, 400
 
             difference = end_date - start_date
             arguments['duration'] = difference.days
@@ -85,7 +85,6 @@ class FlightResource(Resource):
         if query_cache_result and datetime.strptime(query_cache_result[1], '%Y-%m-%d %H-%M-%S') + timedelta(minutes=cache_timeout) > datetime.utcnow():
             db_cursor.execute(f"SELECT PLAN.start_date, PLAN.end_date, PLAN.origin, PLAN.destination, PLAN.price, CITIES.image FROM PLAN INNER JOIN CITIES ON PLAN.destination = CITIES.iata_name WHERE PLAN.query_id=?", (query_cache_result[0],))
             for query_result in db_cursor.fetchall():
-                print(query_result)
                 flight = {
                     'departureDate': query_result[0],
                     'returnDate': query_result[1],
@@ -103,11 +102,9 @@ class FlightResource(Resource):
                 flights = amadeus.shopping.flight_destinations.get(**arguments).result
                 status_code = 200
             except NotFoundError:
-                return {'flights': []}
-                status_code = 201
+                return {'flights': []}, 201
             except ServerError:
-                return {'error':500, 'status':'Server Error', 'message':'Probably the city does not exist'}
-                status_code = 500
+                return {'error':500, 'status':'Server Error', 'message':'Probably the city does not exist'}, 500
 
             query_id = int(random.getrandbits(256)) % (2 << 63 - 1)
             db_cursor.execute("INSERT INTO QUERIES VALUES(?,?,strftime('%Y-%m-%d %H-%M-%S','now'),?,?)", (query_id, uuid, status_code, arguments_hash))
@@ -171,13 +168,11 @@ class CityLikeResource(Resource):
         print(data)
         print(request.json)
         if 'uuid' not in data:
-            return Response(jsonify({'error':'UUID is obligatory', 'status':400}), status=400, mimetype='application/json')
+            return {'error':'UUID is obligatory', 'status':400}, 400
         if 'destination' not in data:
-            return Response(jsonify({'error': 'destination is required', 'status': 400}), status=400,
-                            mimetype='application/json')
+            return {'error': 'destination is required', 'status': 400}, 400
         if 'like' not in data:
-            return Response(jsonify({'error': 'like status is required', 'status': 400}), status=400,
-                            mimetype='application/json')
+            return {'error': 'like status is required', 'status': 400}, 400
         like = True if data['like'] else False
 
         db_cursor.execute("SELECT last_query FROM USERS WHERE uuid=?", (data['uuid'],))
