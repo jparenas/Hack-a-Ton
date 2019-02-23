@@ -42,9 +42,10 @@ class SecureResource(Resource):
 @api_rest.param('budget', 'Budget of the flight')
 @api_rest.param('start_date', 'Start date of the flight')
 @api_rest.param('end_date', 'End date of the flight')
+@api_rest.param('num_passengers', 'Number of passengers')
 class FlightResource(Resource):
     def get(self):
-        arguments = {'currency': 'USD'}
+        arguments = {'currency': 'USD', 'nonStop': False}
 
         if not request.args.get('origin'):
             return {'error':'Origin city is obligatory', 'status':400}, 400
@@ -75,6 +76,11 @@ class FlightResource(Resource):
 
             difference = end_date - start_date
             arguments['duration'] = difference.days
+
+        if request.args.get('num_passengers'):
+            num_passengers = abs(int(request.args.get('num_passengers')))
+        else:
+            num_passengers = 1
 
         arguments_hash = hashlib.sha256(str(arguments).encode('ascii')).hexdigest()
         db_cursor.execute(f"SELECT query_id, time FROM QUERIES WHERE query_hash=?", (arguments_hash,))
@@ -107,7 +113,18 @@ class FlightResource(Resource):
                 return {'error':500, 'status':'Server Error', 'message':'Probably the city does not exist'}, 500
 
             query_id = int(random.getrandbits(256)) % (2 << 63 - 1)
-            db_cursor.execute("INSERT INTO QUERIES VALUES(?,?,strftime('%Y-%m-%d %H-%M-%S','now'),?,?)", (query_id, uuid, status_code, arguments_hash))
+            db_cursor.execute("INSERT INTO QUERIES VALUES(?,?,?,strftime('%Y-%m-%d %H-%M-%S','now'),?,?,?,?,?,?)", 
+            (
+                query_id,
+                arguments_hash,
+                uuid,
+                status_code,
+                arguments['origin'],
+                request.args.get('budget') if request.args.get('budget') else None,
+                request.args.get('start_date') if request.args.get('start_date') else None,
+                request.args.get('end_date') if request.args.get('end_date') else None,
+                num_passengers
+            ))
             db_cursor.execute("INSERT OR IGNORE INTO USERS (uuid, last_query) VALUES (?,?)", (uuid, query_id))
             db_cursor.execute("UPDATE USERS SET last_query=? WHERE uuid=?", (query_id, uuid))
 
@@ -158,6 +175,10 @@ class FlightResource(Resource):
                 del flight['links']
                 result.append(flight)
 
+        for flight in result:
+            flight['price']['passenger'] = float(flight['price']['total'])
+            flight['price']['total'] = round(float(flight['price']['total']) * num_passengers, 2)
+
         db_connection.commit()
         return {'flights': result}
 
@@ -182,6 +203,41 @@ class CityLikeResource(Resource):
         db_connection.commit()
         
         return {}, 400
+
+@api_rest.route('/retrieve_previous_search')
+@api_rest.param('uuid', 'UUID of the user')
+class PreviousSearchResource(Resource):
+    def get(self):
+        if not request.args.get('uuid'):
+            return {'error':'UUID is obligatory', 'status':400}, 400
+
+        db_cursor.execute("SELECT last_query FROM USERS WHERE uuid=?", (request.args.get('uuid'),))
+        query_results = db_cursor.fetchone()
+        if not query_results:
+            result = {
+                'error': 'User not found',
+                'status': 404
+            }
+            return result, 404
+
+        db_cursor.execute("SELECT departure, budget, start_day, end_day, num_passengers FROM QUERIES WHERE query_id=?", (query_results[0],))
+        query_results = db_cursor.fetchone()
+        if query_results:
+            result = {
+                'departure': query_results[0],
+                'budget': query_results[1],
+                'start_day': query_results[2],
+                'end_day': query_results[3],
+                'num_passengers': query_results[4],
+            }
+
+            return result
+        else:
+            result = {
+                'error': 'No search found',
+                'status': 404
+            }
+            return result, 404
 
 """
 @api_rest.route('/secure-resource/<string:resource_id>')
