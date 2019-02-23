@@ -22,7 +22,7 @@ amadeus = Client(
     #log_level='debug'
 )
 
-cache_timeout = os.getenv('CACHE_TIMEOUT', 20)
+cache_timeout = os.getenv('CACHE_TIMEOUT', 30)
 
 db_connection, db_cursor = get_database()
 
@@ -42,15 +42,16 @@ class SecureResource(Resource):
 @api_rest.param('budget', 'Budget of the flight')
 @api_rest.param('start_date', 'Start date of the flight')
 @api_rest.param('end_date', 'End date of the flight')
+@api_rest.param('num_passengers', 'Number of passengers')
 class FlightResource(Resource):
     def get(self):
-        arguments = {'currency': 'USD'}
+        arguments = {'currency': 'USD', 'nonStop': False}
 
         if not request.args.get('origin'):
-            return Response(jsonify({'error':'Origin city is obligatory', 'status':400}), status=400, mimetype='application/json')
+            return {'error':'Origin city is obligatory', 'status':400}, 400
 
         if not request.args.get('uuid'):
-            return Response(jsonify({'error':'UUID is obligatory', 'status':400}), status=400, mimetype='application/json')
+            return {'error':'UUID is obligatory', 'status':400}, 400
 
         arguments['origin'] = request.args.get('origin')
         uuid = request.args.get('uuid')
@@ -60,21 +61,26 @@ class FlightResource(Resource):
 
         if request.args.get('start_date'):
             if not check_date(request.args.get('start_date')):
-                return Response(jsonify({'error':'Start date is not using the right format', 'status':400}), status=400, mimetype='application/json')
+                return {'error':'Start date is not using the right format', 'status':400}, 400
             arguments['departureDate'] = request.args.get('start_date')
 
         if request.args.get('end_date') and request.args.get('start_date'):
             if not check_date(request.args.get('end_date')):
-                return Response(jsonify({'error':'End date is not using the right format', 'status':400}), status=400, mimetype='application/json')
+                return {'error':'End date is not using the right format', 'status':400}, 400
 
             start_date = datetime.strptime(request.args.get('start_date'), '%Y-%m-%d').date()
             end_date = datetime.strptime(request.args.get('end_date'), '%Y-%m-%d').date()
 
             if start_date > end_date:
-                return Response(jsonify({'error':'End date is earlier than the start day', 'status':400}), status=400, mimetype='application/json')
+                return {'error':'End date is earlier than the start day', 'status':400}, 400
 
             difference = end_date - start_date
             arguments['duration'] = difference.days
+
+        if request.args.get('num_passengers'):
+            num_passengers = abs(int(request.args.get('num_passengers')))
+        else:
+            num_passengers = 1
 
         arguments_hash = hashlib.sha256(str(arguments).encode('ascii')).hexdigest()
         db_cursor.execute(f"SELECT query_id, time FROM QUERIES WHERE query_hash=?", (arguments_hash,))
@@ -85,7 +91,6 @@ class FlightResource(Resource):
         if query_cache_result and datetime.strptime(query_cache_result[1], '%Y-%m-%d %H-%M-%S') + timedelta(minutes=cache_timeout) > datetime.utcnow():
             db_cursor.execute(f"SELECT PLAN.start_date, PLAN.end_date, PLAN.origin, PLAN.destination, PLAN.price, CITIES.image FROM PLAN INNER JOIN CITIES ON PLAN.destination = CITIES.iata_name WHERE PLAN.query_id=?", (query_cache_result[0],))
             for query_result in db_cursor.fetchall():
-                print(query_result)
                 flight = {
                     'departureDate': query_result[0],
                     'returnDate': query_result[1],
@@ -103,24 +108,35 @@ class FlightResource(Resource):
                 flights = amadeus.shopping.flight_destinations.get(**arguments).result
                 status_code = 200
             except NotFoundError:
-                return {'flights': []}
-                status_code = 201
+                return {'flights': []}, 201
             except ServerError:
-                return {'error':500, 'status':'Server Error', 'message':'Probably the city does not exist'}
-                status_code = 500
+                return {'error':500, 'status':'Server Error', 'message':'Probably the city does not exist'}, 500
 
             query_id = int(random.getrandbits(256)) % (2 << 63 - 1)
-            db_cursor.execute("INSERT INTO QUERIES VALUES(?,?,strftime('%Y-%m-%d %H-%M-%S','now'),?,?)", (query_id, uuid, status_code, arguments_hash))
+            db_cursor.execute("INSERT INTO QUERIES VALUES(?,?,?,strftime('%Y-%m-%d %H-%M-%S','now'),?,?,?,?,?,?)", 
+            (
+                query_id,
+                arguments_hash,
+                uuid,
+                status_code,
+                arguments['origin'],
+                request.args.get('budget') if request.args.get('budget') else None,
+                request.args.get('start_date') if request.args.get('start_date') else None,
+                request.args.get('end_date') if request.args.get('end_date') else None,
+                num_passengers
+            ))
             db_cursor.execute("INSERT OR IGNORE INTO USERS (uuid, last_query) VALUES (?,?)", (uuid, query_id))
-            db_cursor.execute("UPDATE USERS SET last_query = ? WHERE uuid=?", (query_id, uuid))
+            db_cursor.execute("UPDATE USERS SET last_query=? WHERE uuid=?", (query_id, uuid))
 
             for flight in flights['data']:
-                db_cursor.execute('INSERT INTO PLAN VALUES(?,?,?,?,?,?)', (
+                db_cursor.execute('INSERT INTO PLAN VALUES(?,?,?,?,?,?,?,?)', (
                     flight['departureDate'],
                     flight['returnDate'],
                     flight['origin'],
                     flight['destination'],
                     flight['price']['total'],
+                    flight['links']['flightOffers'],
+                    None,
                     query_id,
                     ))
                 db_cursor.execute('SELECT image FROM CITIES WHERE iata_name=?', (flight['destination'],))
@@ -156,38 +172,76 @@ class FlightResource(Resource):
 
                 flight['image'] = image_url
                 del flight['type']
+                del flight['links']
                 result.append(flight)
+
+        for flight in result:
+            flight['price']['passenger'] = float(flight['price']['total'])
+            flight['price']['total'] = round(float(flight['price']['total']) * num_passengers, 2)
 
         db_connection.commit()
         return {'flights': result}
 
 
 @api_rest.route('/like_place')
-@api_rest.param('places', 'list of places that a user interacted with')
-@api_rest.param('likes', 'the user action to listed places')
 class CityLikeResource(Resource):
-    """ Unsecure Resource Class: Inherit from Resource """
-    def put(self):
-        arguments = {}
-        if not request.args.get('places'):
-            return Response(jsonify({'error': 'places are not selected', 'status': 400}), status=400,
-                            mimetype='application/json')
-        arguments['places'] = request.args.get('places')
-        if not request.args.get('likes'):
-            return Response(jsonify({'error': 'likes are not selected', 'status': 400}), status=400,
-                            mimetype='application/json')
-        arguments['likes'] = request.args.get('likes')
-        return arguments
+    def post(self):
+        data = request.json if request.json else request.form
+        print(data)
+        print(request.json)
+        if 'uuid' not in data:
+            return {'error':'UUID is obligatory', 'status':400}, 400
+        if 'destination' not in data:
+            return {'error': 'destination is required', 'status': 400}, 400
+        if 'like' not in data:
+            return {'error': 'like status is required', 'status': 400}, 400
+        like = True if data['like'] else False
 
+        db_cursor.execute("SELECT last_query FROM USERS WHERE uuid=?", (data['uuid'],))
+        query_id = db_cursor.fetchone()
+        if query_id:
+            db_cursor.execute("UPDATE PLAN SET like=? WHERE query_id=? AND destination=?", (like, query_id[0], data['destination']))
 
-@api_rest.route('/secure-resource/<string:resource_id>')
-class SecureResourceOne(SecureResource):
-    """ Unsecure Resource Class: Inherit from Resource """
+            db_connection.commit()
+            
+            return {}, 200
+        else:
+            return {'error': 'User does not exist', 'status': 404}, 404
 
-    def get(self, resource_id):
-        timestamp = datetime.utcnow().isoformat()
-        return {'timestamp': timestamp}
+@api_rest.route('/retrieve_previous_search')
+@api_rest.param('uuid', 'UUID of the user')
+class PreviousSearchResource(Resource):
+    def get(self):
+        if not request.args.get('uuid'):
+            return {'error':'UUID is obligatory', 'status':400}, 400
 
+        db_cursor.execute("SELECT last_query FROM USERS WHERE uuid=?", (request.args.get('uuid'),))
+        query_results = db_cursor.fetchone()
+        if not query_results:
+            result = {
+                'error': 'User not found',
+                'status': 404
+            }
+            return result, 404
+
+        db_cursor.execute("SELECT departure, budget, start_day, end_day, num_passengers FROM QUERIES WHERE query_id=?", (query_results[0],))
+        query_results = db_cursor.fetchone()
+        if query_results:
+            result = {
+                'departure': query_results[0],
+                'budget': query_results[1],
+                'start_day': query_results[2],
+                'end_day': query_results[3],
+                'num_passengers': query_results[4],
+            }
+
+            return result
+        else:
+            result = {
+                'error': 'No search found',
+                'status': 404
+            }
+            return result, 404
 
 @api_rest.route('/get_tickets')
 @api_rest.param('returnDate', 'the date of arrival')
