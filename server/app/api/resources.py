@@ -93,7 +93,7 @@ class FlightResource(Resource):
         query_cache_result = db_cursor.fetchone()
 
         if query_cache_result and datetime.strptime(query_cache_result[1], '%Y-%m-%d %H-%M-%S') + timedelta(minutes=cache_timeout) > datetime.utcnow():
-            db_cursor.execute(f"SELECT PLAN.start_date, PLAN.end_date, PLAN.origin, PLAN.destination, PLAN.price, IMAGES.image FROM PLAN INNER JOIN CITIES ON PLAN.destination = IMAGE.iata_name WHERE PLAN.query_id=?", (query_cache_result[0],))
+            db_cursor.execute(f"SELECT PLAN.start_date, PLAN.end_date, PLAN.origin, PLAN.destination, PLAN.price, IMAGES.image FROM PLAN INNER JOIN IMAGES ON PLAN.destination = IMAGES.iata_name WHERE PLAN.query_id=?", (query_cache_result[0],))
             for query_result in db_cursor.fetchall():
                 flight = {
                     'departureDate': query_result[0],
@@ -145,7 +145,6 @@ class FlightResource(Resource):
                     ))
                 db_cursor.execute('SELECT image FROM IMAGES WHERE iata_name=?', (flight['destination'],))
                 query_result = db_cursor.fetchall()
-                print(query_result)
                 if query_result == []:
                     destination_name = amadeus.reference_data.locations.get(
                         keyword=flight['destination'],
