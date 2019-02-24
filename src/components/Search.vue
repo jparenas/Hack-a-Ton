@@ -43,7 +43,7 @@ export default {
   },
   methods: {
     getFormValues (submitEvent) {
-      this.$router.push('show?origin=' + submitEvent.target.elements.departure.value)
+      this.$router.push('show?origin=' + submitEvent.target.elements.departure.value + "&budget=" + submitEvent.target.elements.trip_budget.value + "&start_date=" + '' + "&end_date="  + '')
     }
   }
 }

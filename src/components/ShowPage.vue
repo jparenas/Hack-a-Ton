@@ -54,6 +54,9 @@ export default {
   name: "ShowPage",
   props: {
     origin: String,
+    budget: String,
+    start_date: String,
+    end_date: String
   },
   data() {
     return {
@@ -77,10 +80,22 @@ export default {
       return a;
     }
 
+    if (this.budget == undefined) {
+      this.budget=''
+    }
+
+    if (this.end_date == undefined) {
+      this.end_date=''
+    }
+
+    if (this.start_date == undefined) {
+      this.start_date=''
+    }
+
     axios.defaults.withCredentials = true;
     axios
       .get(
-        "/api/get_flights?end_date=2019-03-01&start_date=2019-02-24&budget=500&uuid=" + this.uuid + "&origin=" + this.origin
+        "/api/get_flights?end_date=" + this.end_date + "&start_date=" + this.start_date + "&budget=" + this.budget + "&uuid=" + this.uuid + "&origin=" + this.origin
       )
       .then(response => {
         this.info = shuffle(response.data.flights);

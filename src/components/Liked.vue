@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h3>{{destination}} - {{price}} <span v-if="liked">⭐</span></h3>
+        <h3 v-if='liked'>{{destination}} - {{price}} <span v-if="super_liked">⭐</span></h3>
     </div>
 </template>
 
