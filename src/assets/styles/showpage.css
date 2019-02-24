@@ -46,6 +46,10 @@ body, html, #app {
   height: 100%;
 }
 
+#app {
+  margin: 0;
+}
+
 /*h1 {
   color: white;
   padding-top: 5%;
