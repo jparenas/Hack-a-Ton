@@ -1,5 +1,5 @@
 <template>
-  <div id='app'>
+  <div id='app' style='margin:0;'>
     <router-view></router-view>
     <!-- <ShowPage msg='Which do you prefer?'/> -->
   </div>
