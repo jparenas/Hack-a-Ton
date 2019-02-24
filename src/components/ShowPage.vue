@@ -3,7 +3,10 @@
 
     <section class='main'>
       <!-- Insert an image -->
-      <img id='picture' src='https://img.grouponcdn.com/deal/u2oGrLLtKK5SYv3dVPFZ/GP-2048x1229/v1/c700x420.jpg' width='750'/>
+      <div>
+        <Card v-for='flight in info' v-bind:key="flight.destination" v-bind:destination="flight.destination" v-bind:imageUrl="flight.image"></Card>
+      </div>
+      <h2 v-if='!info'>Loading</h2>
 
       <!-- Show like and unlike buttons -->
       <div class='controls'>
@@ -24,15 +27,32 @@
 
 <script>
 import Flight from'./Flight.vue';
+import Card from './Card.vue';
+import axios from 'axios';
 
 export default {
   name: 'ShowPage',
   props: {
     msg: String
   },
+  data () {
+    return {
+      info: null
+    }
+  },
   components: {
-    Flight
-  }
+    Flight,
+    Card
+  },
+  mounted () {
+    axios.defaults.withCredentials = true;
+    axios
+      .get('http://localhost:8080/api/get_flights?end_date=2019-03-01&start_date=2019-02-24&budget=500&uuid=1&origin=MAD')
+      .then(response => {
+        console.log(response.data);
+        this.info = response.data.flights;
+      })
+    }
   // data() {
   //   return {
   //     count: 0

@@ -15,7 +15,7 @@ def get_database():
         cursor.execute("DROP TABLE IMAGES")
 
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS QUERIES 
+    CREATE TABLE IF NOT EXISTS QUERIES
     (
         query_id INT NOT NULL,
         query_hash BINARY(32) NOT NULL,
@@ -32,7 +32,7 @@ def get_database():
     """)
 
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS USERS 
+    CREATE TABLE IF NOT EXISTS USERS
     (
         uuid INT NOT NULL,
         last_query INT,

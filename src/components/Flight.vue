@@ -1,10 +1,10 @@
 <template>
   <div>
     <h1>Liked ones!</h1>
-    <div v-for='f in info' :key='idx' id='flight'>
-      {{ f }}:
+    <div v-for='(val, idx) in info' :key='idx' id='flight'>
+      {{ val }}:
       <span>
-        <span v-html='f.flights'></span>
+        <span v-html='val.image'></span> {{ val.image }}
       </span>
     </div>
     <!-- <div v-for="currency in info" class="currency">
@@ -21,23 +21,15 @@ import axios from 'axios'
 
 export default {
   name: 'Flight',
-  props: {
-  },
   data () {
     return {
       info: null,
       loading: true,
-      errored: false
+      errored: false,
+      current_image_url:'',
     }
   },
   mounted () {
-    axios.defaults.withCredentials = true;
-    axios
-      // .get('http://localhost:8080/api/get_flights?')
-      .get('http://localhost:8080/api/get_flights?end_date=2019-03-01&start_date=2019-02-24&budget=500&uuid=1&origin=MAD')
-      .then(response => {
-        this.info = response
-      })
       // .catch(error => {
       //   this.errored = true,
       //   console.log(error)
@@ -49,14 +41,14 @@ export default {
 
 <style>
 .flight {
-  color: white;
+  color: black;
 }
 
 h1 {
-  color: white;
+  color: black;
 }
 
 span {
-  color: white;
+  color: black;
 }
 </style>
