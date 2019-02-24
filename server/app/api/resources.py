@@ -190,7 +190,7 @@ class FlightResource(Resource):
                         if place_details['result'] != {}:
                             if 'photos' in place_details['result']:
                                 for photo in place_details['result']['photos']:
-                                    image_url = 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=750&photoreference=' + photo['photo_reference'] + '&key=' + os.getenv('GOOGLE_MAPS_SERVER_KEY')
+                                    image_url = 'https://maps.googleapis.com/maps/api/place/photo?maxheight=400&photoreference=' + photo['photo_reference'] + '&key=' + os.getenv('GOOGLE_MAPS_SERVER_KEY')
                                     images.append(image_url)
                             else: 
                                 images.append('')
