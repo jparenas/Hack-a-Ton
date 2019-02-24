@@ -71,8 +71,4 @@ def get_database():
         FOREIGN KEY (destination) REFERENCES CITIES(iata_name))
     """)
 
-    cursor.execute('SELECT iata_name, city_name FROM CITIES')
-
-    print(cursor.fetchone())
-
     return connection, cursor

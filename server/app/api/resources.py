@@ -211,8 +211,6 @@ class FlightResource(Resource):
 class CityLikeResource(Resource):
     def post(self):
         data = request.json if request.json else request.form
-        print(data)
-        print(request.json)
         if 'uuid' not in data:
             return {'error':'UUID is obligatory', 'status':400}, 400
         if 'destination' not in data:
@@ -268,6 +266,7 @@ class PreviousSearchResource(Resource):
             return result, 404
 
 @api_rest.route('/get_tickets')
+@api_rest.param('num_passengers', 'the number of passangers')
 @api_rest.param('returnDate', 'the date of arrival')
 @api_rest.param('departureDate', 'the date of departure')
 @api_rest.param('destination', 'the destination')
@@ -280,6 +279,11 @@ class TicketResource(Resource):
         arguments['departureDate'] = request.args.get('departureDate')
         arguments['returnDate'] = request.args.get('returnDate')
 
+        if request.args.get('num_passengers'):
+            num_passengers = request.args.get('num_passengers')
+        else:
+            num_passengers = 1
+
         try:
             flights = amadeus.shopping.flight_offers.get(**arguments).result
             status_code = 200
@@ -289,7 +293,10 @@ class TicketResource(Resource):
             return {'error': 500, 'status': 'Server Error', 'message': 'Probably the city does not exist'}, 500
         extracted_flight_list = []
         for offer_item in flights['data']:
-            price = float(offer_item['offerItems'][0]['price']['total']) + float(offer_item['offerItems'][0]['price']['totalTaxes'])
+            flight_data = {}
+            flight_data['price_per_passenger'] = (float(offer_item['offerItems'][0]['price']['total']) + float(offer_item['offerItems'][0]['price']['totalTaxes']))
+            flight_data['price_total'] = round(flight_data['price_per_passenger'] * num_passengers, 2)
+            
             extracted_flight_list.append(price)
         print(extracted_flight_list)
         return extracted_flight_list, status_code
