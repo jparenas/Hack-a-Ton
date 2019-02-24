@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h3>{{destination}} - <span v-if="liked">Liked!</span><span v-else>Not liked:( RIP<span></h3>
+        <h3>{{destination}} - {{price}} <span v-if="liked">⭐</span></h3>
     </div>
 </template>
 
@@ -9,6 +9,8 @@ export default {
     name: "Liked",
     props: {
         destination: String,
+        price: String,
+        super_liked: Boolean,
         liked: Boolean
     },
     data() {

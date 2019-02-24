@@ -4,7 +4,7 @@
       <img class="destination_image card-body col-md-10" v-bind:src="imageUrl">
     </div>
     <div>
-      <h2 class="card-title">{{destination}}</h2>
+      <h2 class="card-title">{{destination}} - ${{price}}</h2>
     </div>
   </div>
 </template>
@@ -14,6 +14,7 @@ export default {
   name: "Card",
   props: {
     destination: String,
+	price: String,
     imageUrl: String
   },
   data() {

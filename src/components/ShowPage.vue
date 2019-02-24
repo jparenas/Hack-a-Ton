@@ -4,13 +4,14 @@
       <!-- Insert an image -->
       <div>
         <Card
-          v-for="flight in info"
-          v-bind:key="flight.destination"
-          v-bind:destination="flight.destination"
-          v-bind:imageUrl="flight.image"
+          v-if="info.length > 0"
+          v-bind:key="info[0].destination"
+          v-bind:destination="info[0].destination"
+          v-bind:imageUrl="info[0].image"
+          v-bind:price="info[0].price.total"
         ></Card>
       </div>
-      <h2 v-if="!info">Loading</h2>
+      <h2 v-if="info === []">Loading</h2>
 
       <!-- Show like and unlike buttons -->
       <div class="controls">
@@ -31,9 +32,11 @@
       <!-- <p>{{count}} times clicked!</p> -->
       <Flight/>
       <Liked
-        v-for="item in liked"
+        v-for="(item, i) in liked"
         v-bind:key="item.destination"
         v-bind:destination="item.destination"
+        v-bind:price="item.price.total"
+        v-bind:super_liked="i === 0"
         v-bind:liked="item.liked"
       ></Liked>
     </section>
@@ -54,7 +57,7 @@ export default {
   },
   data() {
     return {
-      info: null,
+      info: [],
       liked: [],
       uuid: uuid.v1(),
       //uuid:  String(this.$uuid.v5().v5.DNS)
@@ -105,7 +108,18 @@ export default {
           }
         )
         .then(response => {
+          var order = response.data.destinations;
           this.liked.push(removed_entry);
+          var liked = [];
+          order.forEach(entry => {
+            var result = this.liked.find(element => {
+              return entry[0] === element.destination;
+            });
+            if (result != undefined) {
+              liked.push(result)
+            }
+          })
+          this.liked = liked;
         });
       }
 

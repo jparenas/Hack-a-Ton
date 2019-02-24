@@ -45,6 +45,8 @@ def get_database():
     (
         iata_name CHAR(3) NOT NULL,
         city_name VARCHAR(255),
+        latitude VARCHAR(255),
+        longitude VARCHAR(255),
         PRIMARY KEY (iata_name))
     """)
 
