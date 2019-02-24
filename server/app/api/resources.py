@@ -6,6 +6,7 @@ import requests
 import hashlib
 import random
 import bisect 
+import requests
 
 from amadeus import Client, Location, ResponseError, NotFoundError, ServerError
 
@@ -150,6 +151,7 @@ class FlightResource(Resource):
                 db_cursor.execute('SELECT image FROM IMAGES WHERE iata_name=?', (flight['destination'],))
                 query_result = db_cursor.fetchall()
                 if query_result == []:
+                    """
                     destination_name = amadeus.reference_data.locations.get(
                         keyword=flight['destination'],
                         subType=Location.CITY
@@ -158,8 +160,12 @@ class FlightResource(Resource):
                         destination_name = destination_name.result['data'][0]['address']['cityName'].lower()
                     else:
                         destination_name = flight['destination']
-
-
+                    """
+                    destination_name = requests.get("https://iatacodes.org/api/v6/cities?api_key=" + os.getenv('IATA_API') + "&code=" + flight['destination'], verify=False).json()
+                    if 'response' in destination_name:
+                        destination_name = destination_name['response'][0]['name'].lower()
+                    else:
+                        destination_name = flight['destination']
 
                     """
                     json_response = requests.get(f'https://api.teleport.org/api/urban_areas/slug:{destination_name}/images/')
