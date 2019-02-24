@@ -126,3 +126,6 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw*
+
+# Databases
+*.db

@@ -1,14 +1,16 @@
 <template>
-  <div id="app">
-    <Airports/>
+  <div id='app'>
+    <ShowPage msg='Which do you prefer?'/>
   </div>
 </template>
+
 <script>
-import Airports from './components/Airports.vue'
+import ShowPage from './components/ShowPage.vue'
+
 export default {
   name: "Airports",
   components: {
-    Airports
+    ShowPage
   }
 }
 </script>

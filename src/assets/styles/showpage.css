@@ -1,0 +1,33 @@
+* {
+  margin: 0;
+  padding: 0;
+  /*background-color: #000;*/
+}
+
+body, html, #app {
+  height: 100%;
+}
+
+/*h1 {
+  color: white;
+  padding-top: 5%;
+}*/
+
+.row {
+  display: flex;
+  text-align: center;
+  height: 100%;
+}
+
+.main {
+  flex: 70%;
+}
+
+.side {
+  flex: 30%;
+  background-color: #f1f1f1;
+}
+
+#picture {
+  padding-top: 15%;
+}
