@@ -23,6 +23,7 @@ export default {
   color: #2c3e50;
 }
 
+@import './assets/styles/showpage.css';
 @import './assets/styles/button.css';
 @import './assets/styles/text.css';
 </style>
