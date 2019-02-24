@@ -4,7 +4,7 @@ import re
 import datetime
 import requests
 import hashlib
-import random 
+import random
 
 from amadeus import Client, Location, ResponseError, NotFoundError, ServerError
 
@@ -113,7 +113,7 @@ class FlightResource(Resource):
                 return {'error':500, 'status':'Server Error', 'message':'Probably the city does not exist'}, 500
 
             query_id = int(random.getrandbits(256)) % (2 << 63 - 1)
-            db_cursor.execute("INSERT INTO QUERIES VALUES(?,?,?,strftime('%Y-%m-%d %H-%M-%S','now'),?,?,?,?,?,?)", 
+            db_cursor.execute("INSERT INTO QUERIES VALUES(?,?,?,strftime('%Y-%m-%d %H-%M-%S','now'),?,?,?,?,?,?)",
             (
                 query_id,
                 arguments_hash,
@@ -148,7 +148,7 @@ class FlightResource(Resource):
                     )
                     if len(destination_name.result['data']) > 0:
                         destination_name = destination_name.result['data'][0]['address']['cityName'].lower()
-                    else: 
+                    else:
                         db_cursor.execute('INSERT INTO CITIES VALUES(?,?,?)', (flight['destination'], flight['destination'], ''))
                         continue
 
@@ -203,7 +203,7 @@ class CityLikeResource(Resource):
             db_cursor.execute("UPDATE PLAN SET like=? WHERE query_id=? AND destination=?", (like, query_id[0], data['destination']))
 
             db_connection.commit()
-            
+
             return {}, 200
         else:
             return {'error': 'User does not exist', 'status': 404}, 404
@@ -271,3 +271,4 @@ class TicketResource(Resource):
             extracted_flight_list.append(price)
         print(extracted_flight_list)
         return extracted_flight_list
+

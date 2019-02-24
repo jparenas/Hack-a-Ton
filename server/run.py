@@ -4,7 +4,7 @@ load_dotenv()
 import os
 from app import app
 
-app.run(port=80)
+app.run(port=8080)
 
 # To Run:
 # python run.py
