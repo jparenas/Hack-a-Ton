@@ -5,6 +5,7 @@ import datetime
 import requests
 import hashlib
 import random
+import bisect 
 
 from amadeus import Client, Location, ResponseError, NotFoundError, ServerError
 
@@ -13,6 +14,8 @@ import googlemaps
 from datetime import datetime, timedelta
 from flask import request, Response, jsonify
 from flask_restplus import Resource
+
+from sklearn.neighbors import KNeighborsRegressor
 
 from .security import require_auth
 from .database import get_database
@@ -93,7 +96,7 @@ class FlightResource(Resource):
         query_cache_result = db_cursor.fetchone()
 
         if query_cache_result and datetime.strptime(query_cache_result[1], '%Y-%m-%d %H-%M-%S') + timedelta(minutes=cache_timeout) > datetime.utcnow():
-            db_cursor.execute(f"SELECT PLAN.start_date, PLAN.end_date, PLAN.origin, PLAN.destination, PLAN.price, IMAGES.image FROM PLAN INNER JOIN IMAGES ON PLAN.destination = IMAGES.iata_name WHERE PLAN.query_id=?", (query_cache_result[0],))
+            db_cursor.execute(f"SELECT PLAN.start_date, PLAN.end_date, PLAN.origin, PLAN.destination, PLAN.price FROM PLAN WHERE PLAN.query_id=?", (query_cache_result[0],))
             for query_result in db_cursor.fetchall():
                 flight = {
                     'departureDate': query_result[0],
@@ -102,9 +105,10 @@ class FlightResource(Resource):
                     'destination': query_result[3],
                     'price': {
                         'total': query_result[4],
-                    },
-                    'image': query_result[5]
+                    }
                 }
+                db_cursor.execute('SELECT image FROM IMAGES WHERE iata_name=?', (flight['destination'],))
+                flight['image'] = random.choice(db_cursor.fetchall())[0]
                 result.append(flight)
         else:
 
@@ -155,7 +159,7 @@ class FlightResource(Resource):
                     else:
                         destination_name = flight['destination']
 
-                    db_cursor.execute('INSERT INTO CITIES VALUES(?,?)', (flight['destination'], destination_name))
+
 
                     """
                     json_response = requests.get(f'https://api.teleport.org/api/urban_areas/slug:{destination_name}/images/')
@@ -173,18 +177,41 @@ class FlightResource(Resource):
                         image_url = ''
                     """
                     place_id = gmaps.find_place(destination_name, 'textquery')['candidates']
+                    images = []
                     if len(place_id) > 0:
                         place_id = place_id[0]['place_id']
-                        place_details = gmaps.place(place_id, random.getrandbits(256), ['photo'])
-                        images = []
+                        place_details = gmaps.place(place_id, random.getrandbits(256), ['photo', 'rating', 'geometry'])
                         if place_details['result'] != {}:
-                            for photo in place_details['result']['photos']:
-                                image_url = 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=750&photoreference=' + photo['photo_reference'] + '&key=' + os.getenv('GOOGLE_MAPS_SERVER_KEY')
-                                images.append(image_url)
+                            if 'photos' in place_details['result']:
+                                for photo in place_details['result']['photos']:
+                                    image_url = 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=750&photoreference=' + photo['photo_reference'] + '&key=' + os.getenv('GOOGLE_MAPS_SERVER_KEY')
+                                    images.append(image_url)
+                            else: 
+                                images.append('')
+                            
+                            db_cursor.execute('INSERT INTO CITIES VALUES(?,?,?,?)', (
+                                flight['destination'], 
+                                destination_name, 
+                                place_details['result']['geometry']['location']['lat'],
+                                place_details['result']['geometry']['location']['lng'],
+                                ))
+
                         else:
                             images.append('')
+                            db_cursor.execute('INSERT INTO CITIES VALUES(?,?,?,?)', (
+                                flight['destination'], 
+                                destination_name, 
+                                None,
+                                None,
+                                ))
                     else:
                         images.append('')
+                        db_cursor.execute('INSERT INTO CITIES VALUES(?,?,?,?)', (
+                                flight['destination'], 
+                                destination_name, 
+                                None,
+                                None,
+                                ))
 
                     for image in images:
                         db_cursor.execute('INSERT INTO IMAGES VALUES(?,?)', (flight['destination'], image))
@@ -225,9 +252,36 @@ class CityLikeResource(Resource):
         if query_id:
             db_cursor.execute("UPDATE PLAN SET like=? WHERE query_id=? AND destination=?", (like, query_id[0], data['destination']))
 
+            db_cursor.execute("SELECT PLAN.destination, PLAN.price, CITIES.latitude, CITIES.longitude, PLAN.like FROM PLAN INNER JOIN CITIES ON PLAN.destination = CITIES.iata_name WHERE PLAN.like IS NOT NULL AND PLAN.query_id=?", (query_id[0],))
+            places = db_cursor.fetchall()
+
+            if len(places) > 4:
+                x = []
+                y = []
+                def get_features(place):
+                    return [float(place[1]), float(place[2]), float(place[3])]
+            
+                for place in places:
+                    x.append(get_features(place))
+                    y.append(float(place[4]))
+                neigh = KNeighborsRegressor(n_neighbors=2)
+                neigh.fit(x, y)
+
+                def calculate_number(place):
+                    return neigh.predict([get_features(place)])[0]
+
+                places.sort(key=calculate_number)
+
             db_connection.commit()
 
-            return {}, 200
+            result = []
+
+            for i in range(len(places)):
+                if int(places[i][4]) == 1:
+                    result.append(places[i][0])
+            
+
+            return {'destinations':places}, 200
         else:
             return {'error': 'User does not exist', 'status': 404}, 404
 
