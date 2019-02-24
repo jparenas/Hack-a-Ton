@@ -7,10 +7,10 @@ export default {
 		props: {
 			options: Array,
 			value: Array  // Number
-	},
-	template: '#select2-template',
-	mounted() {
-		const select = $(this.$el);
+		},
+		template: '#select2-template',
+		mounted() {
+			const select = $(this.$el);
 		// $(this.$el)
 		select
 		// init select2

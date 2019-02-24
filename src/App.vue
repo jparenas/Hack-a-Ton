@@ -1,14 +1,12 @@
 <template>
   <div id="app">
-    <Airports/>
   </div>
 </template>
+
 <script>
-import Airports from './components/Airports.vue'
 export default {
   name: "Airports",
   components: {
-    Airports
   }
 }
 </script>
@@ -23,6 +21,5 @@ export default {
   margin-top: 60px;
 }
 
-@import './assets/styles/button.css';
-@import './assets/styles/text.css';
+@import "./assets/styles/firstpage.css"
 </style>
