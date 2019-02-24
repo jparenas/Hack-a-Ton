@@ -4,7 +4,7 @@ load_dotenv()
 import os
 from app import app
 
-app.run(port=os.getenv('PORT', 8080))
+app.run(host='0.0.0.0', port=os.getenv('PORT', 8080))
 
 # To Run:
 # python run.py
