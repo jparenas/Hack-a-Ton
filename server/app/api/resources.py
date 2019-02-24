@@ -8,6 +8,8 @@ import random
 
 from amadeus import Client, Location, ResponseError, NotFoundError, ServerError
 
+import googlemaps
+
 from datetime import datetime, timedelta
 from flask import request, Response, jsonify
 from flask_restplus import Resource
@@ -21,6 +23,8 @@ amadeus = Client(
     client_secret=os.getenv('AMADEUS_SECRET_KEY'),
     #log_level='debug'
 )
+
+gmaps = googlemaps.Client(key=os.getenv('GOOGLE_MAPS_SERVER_KEY'))
 
 cache_timeout = os.getenv('CACHE_TIMEOUT', 30)
 
@@ -48,10 +52,10 @@ class FlightResource(Resource):
         arguments = {'currency': 'USD', 'nonStop': False}
 
         if not request.args.get('origin'):
-            return {'error':'Origin city is obligatory', 'status':400}, 400
+            return {'error':'Origin city is mandatory', 'status':400}, 400
 
         if not request.args.get('uuid'):
-            return {'error':'UUID is obligatory', 'status':400}, 400
+            return {'error':'UUID is mandatory', 'status':400}, 400
 
         arguments['origin'] = request.args.get('origin')
         uuid = request.args.get('uuid')
@@ -89,7 +93,7 @@ class FlightResource(Resource):
         query_cache_result = db_cursor.fetchone()
 
         if query_cache_result and datetime.strptime(query_cache_result[1], '%Y-%m-%d %H-%M-%S') + timedelta(minutes=cache_timeout) > datetime.utcnow():
-            db_cursor.execute(f"SELECT PLAN.start_date, PLAN.end_date, PLAN.origin, PLAN.destination, PLAN.price, CITIES.image FROM PLAN INNER JOIN CITIES ON PLAN.destination = CITIES.iata_name WHERE PLAN.query_id=?", (query_cache_result[0],))
+            db_cursor.execute(f"SELECT PLAN.start_date, PLAN.end_date, PLAN.origin, PLAN.destination, PLAN.price, IMAGES.image FROM PLAN INNER JOIN CITIES ON PLAN.destination = IMAGE.iata_name WHERE PLAN.query_id=?", (query_cache_result[0],))
             for query_result in db_cursor.fetchall():
                 flight = {
                     'departureDate': query_result[0],
@@ -139,9 +143,10 @@ class FlightResource(Resource):
                     None,
                     query_id,
                     ))
-                db_cursor.execute('SELECT image FROM CITIES WHERE iata_name=?', (flight['destination'],))
-                query_result = db_cursor.fetchone()
-                if query_result is None:
+                db_cursor.execute('SELECT image FROM IMAGES WHERE iata_name=?', (flight['destination'],))
+                query_result = db_cursor.fetchall()
+                print(query_result)
+                if query_result == []:
                     destination_name = amadeus.reference_data.locations.get(
                         keyword=flight['destination'],
                         subType=Location.CITY
@@ -149,9 +154,11 @@ class FlightResource(Resource):
                     if len(destination_name.result['data']) > 0:
                         destination_name = destination_name.result['data'][0]['address']['cityName'].lower()
                     else:
-                        db_cursor.execute('INSERT INTO CITIES VALUES(?,?,?)', (flight['destination'], flight['destination'], ''))
-                        continue
+                        destination_name = flight['destination']
 
+                    db_cursor.execute('INSERT INTO CITIES VALUES(?,?)', (flight['destination'], destination_name))
+
+                    """
                     json_response = requests.get(f'https://api.teleport.org/api/urban_areas/slug:{destination_name}/images/')
                     try:
                         json_response = json_response.json()
@@ -165,10 +172,28 @@ class FlightResource(Resource):
 
                     except json.decoder.JSONDecodeError:
                         image_url = ''
+                    """
+                    place_id = gmaps.find_place(destination_name, 'textquery')['candidates']
+                    if len(place_id) > 0:
+                        place_id = place_id[0]['place_id']
+                        place_details = gmaps.place(place_id, random.getrandbits(256), ['photo'])
+                        images = []
+                        if place_details['result'] != {}:
+                            for photo in place_details['result']['photos']:
+                                image_url = 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=750&photoreference=' + photo['photo_reference'] + '&key=' + os.getenv('GOOGLE_MAPS_SERVER_KEY')
+                                images.append(image_url)
+                        else:
+                            images.append('')
+                    else:
+                        images.append('')
 
-                    db_cursor.execute('INSERT INTO CITIES VALUES(?,?,?)', (flight['destination'], destination_name, image_url))
+                    for image in images:
+                        db_cursor.execute('INSERT INTO IMAGES VALUES(?,?)', (flight['destination'], image))
+                        
+                    image_url = random.choice(images)
+
                 else:
-                    image_url = query_result[0]
+                    image_url = random.choice(query_result)[0]
 
                 flight['image'] = image_url
                 del flight['type']
@@ -260,11 +285,9 @@ class TicketResource(Resource):
             flights = amadeus.shopping.flight_offers.get(**arguments).result
             status_code = 200
         except NotFoundError:
-            return {'flights': []}
-            status_code = 201
+            return {'flights': []}, 201
         except ServerError:
-            return {'error': 500, 'status': 'Server Error', 'message': 'Probably the city does not exist'}
-            status_code = 500
+            return {'error': 500, 'status': 'Server Error', 'message': 'Probably the city does not exist'}, 500
         extracted_flight_list = []
         for offer_item in flights['data']:
             price = float(offer_item['offerItems'][0]['price']['total']) + float(offer_item['offerItems'][0]['price']['totalTaxes'])

@@ -12,6 +12,7 @@ def get_database():
         cursor.execute("DROP TABLE USERS")
         cursor.execute("DROP TABLE QUERIES")
         cursor.execute("DROP TABLE CITIES")
+        cursor.execute("DROP TABLE IMAGES")
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS QUERIES 
@@ -44,8 +45,15 @@ def get_database():
     (
         iata_name CHAR(3) NOT NULL,
         city_name VARCHAR(255),
-        image VARCHAR(1024),
         PRIMARY KEY (iata_name))
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS IMAGES
+    (
+        iata_name CHAR(3) NOT NULL,
+        image VARCHAR(1024) NOT NULL,
+        FOREIGN KEY (iata_name) REFERENCES CITIES(iata_name))
     """)
 
     cursor.execute("""
