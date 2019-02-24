@@ -1,3 +1,48 @@
+.content {
+  margin-top: 10px
+}
+
+.airport {
+  width: 150px;
+  height: 40px;
+  font-size: 20px;
+  border: 1px solid #dee7ec;
+}
+
+.airport::placeholder {
+  font-size: 15px;
+}
+
+.input_date {
+  width: 200px;
+  font-size: 20px;
+  border: 1px solid #dee7ec;
+}
+
+.input_budget {
+  width: 200px;
+  height: 35px;
+  font-size: 20px;
+  border: 1px solid #dee7ec;
+}
+
+.info-submit {
+  background-color: #dee7ec;
+  color: gray;
+  opacity: 0.7;
+  margin-top: 20px;
+  width: 400px;
+  height: 50px;
+  font-size: 20px;
+}
+
+.info-submit:hover {
+  opacity: 1;
+}
+
+.submit-button {
+	text-align: center;
+
 .controls{
     position: relative;
     width: 200px;
@@ -8,6 +53,7 @@
     margin: 0 auto;
     margin-top: 50px
 }
+  
 .controls .button {
     border: none;
     background: none;
@@ -22,6 +68,7 @@
     border-radius: 50%;
     background: #fff;
 }
+  
 .button .next{
     display: inline-block;
     width: 10px;
@@ -35,6 +82,7 @@
     top: 2px;
     position: relative;
 }
+  
 .button .next:after{
     content:'/';
     display:block;
@@ -43,6 +91,7 @@
     background: rgb(129,212,125);
     -webkit-transform: rotate(-90deg) translateY(-50%) translateX(50%);
 }
+  
 .button .prev{
     display: inline-block;
     width: 20px;
@@ -53,6 +102,7 @@
     vertical-align: middle;
     -webkit-transform: rotate(45deg);
 }
+  
 .button .prev:after{
     content:'/';
     display:block;
@@ -61,6 +111,7 @@
     background: rgb(230,104,104);
     -webkit-transform: rotate(-90deg);
 }
+  
 .controls .text-hidden {
     position: absolute;
     overflow: hidden;

@@ -1,16 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>hack-a-ton</title>
-  </head>
-  <body>
-    <noscript>
-      <strong>We're sorry but hack-a-ton doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
-    </noscript>
-    <div id="app"></div>
-    <!-- built files will be auto injected -->
-  </body>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link rel="icon" type="image/png" href="page_icon.png">
+  <link href="https://fonts.googleapis.com/css?family=Coiny" rel="stylesheet">
+  <title>Trip Matching</title>
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script type="text/javascript">
+    $(function(){
+      $('#move_target').on('click', function(){
+        var targetTop = $('#target_point').offset().top;
+        $('#target_top span').html(targetTop);
+        $('html,body').animate({
+          scrollTop: targetTop
+        }, 500);
+        return false;
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="top-wrapper">
+    <div class="head_title">
+      <h2>Trip Matching</h2>
+      <a href="#target_point" id="move_target" class="target_point">Let's Serach!!</a>
+    </div>
+    
+  </div>
+
+  <div class="submit-all">
+    <div id="target_point">It's time for an adventure!!</a>
+      <div class="contents">
+        <form action="/form-page" method="post">
+
+          <div class="content">
+            <label for="origin">Departure Airport: <input class="airport" name="departure" id="departure" placeholder="Enter 3 Letters" maxlength="3" style="text-transform:uppercase"> </label>
+          </div>
+
+          <div class="content">
+            <label for="location">Destination Airport: <input class="airport" name="destination" id="destination" placeholder="Enter 3 Letters" maxlength="3" style="text-transform:uppercase">
+          </div>
+
+          <div class="content">
+            <label for="date">Date: </label>
+            <label for="date"><p class="date">From <input type="date" id="date" name="d_date" class="input_date"></p>
+            <p class="date">To<input type="date" id="date" name="trip_date" class="input_date"></p></label>
+          </div>
+
+          <div class="content">
+            <label for="budget">Budget </label>
+            <input type="number" id="budget" name="trip_budget" class="input_budget" placeholder="$">
+          </div>
+
+          <div class="submit-button">
+            <input type="submit" value="Submit" class="info-submit">
+          </div>
+
+      </div>
+          <!-- <div id="app"></div> -->
+    </div>
+  </div>
+
+</body>
+<footer>
+</footer>
 </html>
