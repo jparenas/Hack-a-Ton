@@ -50,7 +50,7 @@ import { uuid } from 'vue-uuid';
 export default {
   name: "ShowPage",
   props: {
-    msg: String
+    origin: String,
   },
   data() {
     return {
@@ -77,7 +77,7 @@ export default {
     axios.defaults.withCredentials = true;
     axios
       .get(
-        "/api/get_flights?end_date=2019-03-01&start_date=2019-02-24&budget=500&uuid=" + this.uuid + "&origin=MAD"
+        "/api/get_flights?end_date=2019-03-01&start_date=2019-02-24&budget=500&uuid=" + this.uuid + "&origin=" + this.origin
       )
       .then(response => {
         this.info = shuffle(response.data.flights);
