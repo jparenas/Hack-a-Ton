@@ -1,0 +1,51 @@
+.content {
+  margin-top: 10px
+}
+
+
+
+.airport {
+  width: 150px;
+  height: 40px;
+  font-size: 20px;
+  border: 1px solid #dee7ec;
+}
+
+.airport::placeholder {
+  font-size: 15px;
+}
+
+.input_date {
+  width: 200px;
+  font-size: 20px;
+  border: 1px solid #dee7ec;
+}
+
+.input_budget {
+  width: 200px;
+  height: 35px;
+  font-size: 20px;
+  border: 1px solid #dee7ec;
+}
+
+.info-submit {
+  background-color: #dee7ec;
+  color: grey;
+  opacity: 0.7;
+  margin-top: 20px;
+  width: 400px;
+  height: 50px;
+  font-size: 20px;
+}
+
+.info-submit:hover {
+  opacity: 1;
+}
+
+.submit-button {
+	text-align: center;
+}
+
+.submit-button::value {
+  font-size: 15px;
+}
