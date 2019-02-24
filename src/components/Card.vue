@@ -1,18 +1,12 @@
 <template>
 <div id='container'>
-
-<div>
-
-<img id='destination_image' v-bind:src='imageUrl' width=750px/>
-
+	<div>
+		<img id='destination_image' v-bind:src='imageUrl' width=750px/>
+	</div>
+	<div>
+		<h2>{{destination}}</h2>
+	</div>
 </div>
-
-<div>
-<h2>{{destination}}</h2>
-</div>
-
-</div>
-
 </template>
 
 <script>
@@ -30,7 +24,7 @@ export default {
 }
 </script>
 
-<style scopped>
+<style scoped>
 #container {
 background: GRAY;
 border-style:solid;
