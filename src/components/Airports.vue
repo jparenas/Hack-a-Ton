@@ -15,8 +15,6 @@ import axios from 'axios'
 
 export default {
   name:"Airports",
-  props:{
-  },
   data () {
     return {
       info: null,
@@ -30,12 +28,6 @@ export default {
     .get('../assets/airports.json')
     .then(response => {
       this.info = response
-    })
-      // .catch(error => {
-      //   // console.log(error)
-      //   this.errored = true
-      // })
-      // .finally(() => this.loading = false)
-    }
+    })}
   }
   </script>

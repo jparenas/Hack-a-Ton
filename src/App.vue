@@ -1,21 +1,20 @@
 <template>
   <div id='app'>
-    <ShowPage msg='Which do you prefer?'/>
+    <router-view></router-view>
+    <!-- <ShowPage msg='Which do you prefer?'/> -->
   </div>
 </template>
 
 <script>
-import ShowPage from './components/ShowPage.vue'
 
 export default {
-  name: "Airports",
+  name: "App",
   components: {
-    ShowPage
   }
 }
 </script>
 
-<style>
+<style scoped>
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
