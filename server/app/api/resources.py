@@ -83,7 +83,7 @@ class FlightResource(Resource):
             num_passengers = 1
 
         arguments_hash = hashlib.sha256(str(arguments).encode('ascii')).hexdigest()
-        db_cursor.execute(f"SELECT query_id, time FROM QUERIES WHERE query_hash=?", (arguments_hash,))
+        db_cursor.execute(f"SELECT query_id, time FROM QUERIES WHERE query_hash=? AND uuid==?", (arguments_hash, uuid))
 
         result = []
         query_cache_result = db_cursor.fetchone()
@@ -270,4 +270,4 @@ class TicketResource(Resource):
             price = float(offer_item['offerItems'][0]['price']['total']) + float(offer_item['offerItems'][0]['price']['totalTaxes'])
             extracted_flight_list.append(price)
         print(extracted_flight_list)
-        return extracted_flight_list
+        return extracted_flight_list, status_code

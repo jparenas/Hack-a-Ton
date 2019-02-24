@@ -1,3 +1,4 @@
+import os
 import sqlite3 as lite
 
 def get_database():
@@ -5,11 +6,12 @@ def get_database():
 
     cursor = connection.cursor()
 
-    #"""
-    cursor.execute("DROP TABLE PLAN")
-    cursor.execute("DROP TABLE USERS")
-    cursor.execute("DROP TABLE QUERIES")
-    #"""
+    if os.getenv('DELETE_TABLES'):
+        print('Restarted Tables!')
+        cursor.execute("DROP TABLE PLAN")
+        cursor.execute("DROP TABLE USERS")
+        cursor.execute("DROP TABLE QUERIES")
+        cursor.execute("DROP TABLE CITIES")
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS QUERIES 
