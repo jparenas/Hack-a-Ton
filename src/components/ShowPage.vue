@@ -6,7 +6,7 @@
         <Card
           v-if="info.length > 0"
           v-bind:key="info[0].destination"
-          v-bind:destination="info[0].destination"
+          v-bind:destination="info[0].destination_name"
           v-bind:imageUrl="info[0].image"
           v-bind:price="info[0].price.total"
         ></Card>
@@ -34,7 +34,7 @@
       <Liked
         v-for="(item, i) in liked"
         v-bind:key="item.destination"
-        v-bind:destination="item.destination"
+        v-bind:destination="item.destination_name"
         v-bind:price="item.price.total"
         v-bind:super_liked="i === 0"
         v-bind:liked="item.liked"

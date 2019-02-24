@@ -236,6 +236,10 @@ class FlightResource(Resource):
         for flight in result:
             flight['price']['passenger'] = float(flight['price']['total'])
             flight['price']['total'] = round(float(flight['price']['total']) * num_passengers, 2)
+            db_cursor.execute('SELECT city_name FROM CITIES WHERE iata_name=?', (flight['destination'],))
+            city_name = db_cursor.fetchone()[0]
+            flight['destination_name'] = city_name.title()
+
 
         db_connection.commit()
         return {'flights': result}
