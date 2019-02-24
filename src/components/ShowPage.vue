@@ -130,7 +130,7 @@ export default {
             var result = this.liked.find(element => {
               return entry[0] === element.destination;
             });
-            if (result != undefined) {
+            if (result != undefined && result.liked == true) {
               liked.push(result)
             }
           })
