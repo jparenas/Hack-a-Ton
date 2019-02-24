@@ -41,7 +41,8 @@
 }
 
 .submit-button {
-	text-align: center;
+  text-align: center;
+}
 
 .controls{
     position: relative;
@@ -53,7 +54,7 @@
     margin: 0 auto;
     margin-top: 50px
 }
-  
+
 .controls .button {
     border: none;
     background: none;
@@ -68,7 +69,7 @@
     border-radius: 50%;
     background: #fff;
 }
-  
+
 .button .next{
     display: inline-block;
     width: 10px;
@@ -82,7 +83,7 @@
     top: 2px;
     position: relative;
 }
-  
+
 .button .next:after{
     content:'/';
     display:block;
@@ -91,7 +92,7 @@
     background: rgb(129,212,125);
     -webkit-transform: rotate(-90deg) translateY(-50%) translateX(50%);
 }
-  
+
 .button .prev{
     display: inline-block;
     width: 20px;
@@ -102,7 +103,7 @@
     vertical-align: middle;
     -webkit-transform: rotate(45deg);
 }
-  
+
 .button .prev:after{
     content:'/';
     display:block;
@@ -111,7 +112,7 @@
     background: rgb(230,104,104);
     -webkit-transform: rotate(-90deg);
 }
-  
+
 .controls .text-hidden {
     position: absolute;
     overflow: hidden;
