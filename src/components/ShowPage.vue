@@ -14,11 +14,11 @@
 
       <!-- Show like and unlike buttons -->
       <div class="controls">
-        <button class="button left">
+        <button v-on:click="like('left')" class="button left">
           <i class="prev"></i>
           <span class="text-hidden">prev</span>
         </button>
-        <button class="button right">
+        <button v-on:click="like('right')" class="button right">
           <i class="next"></i>
           <span class="text-hidden">next</span>
         </button>
@@ -30,6 +30,12 @@
     <section class="side">
       <!-- <p>{{count}} times clicked!</p> -->
       <Flight/>
+      <Liked
+        v-for="item in liked"
+        v-bind:key="item.destination"
+        v-bind:destination="item.destination"
+        v-bind:liked="item.liked"
+      ></Liked>
     </section>
   </section>
 </template>
@@ -37,7 +43,9 @@
 <script>
 import Flight from "./Flight.vue";
 import Card from "./Card.vue";
+import Liked from "./Liked.vue";
 import axios from "axios";
+import { uuid } from 'vue-uuid';
 
 export default {
   name: "ShowPage",
@@ -46,12 +54,16 @@ export default {
   },
   data() {
     return {
-      info: null
+      info: null,
+      liked: [],
+      uuid: uuid.v1(),
+      //uuid:  String(this.$uuid.v5().v5.DNS)
     };
   },
   components: {
     Flight,
-    Card
+    Card,
+    Liked
   },
   mounted() {
     function shuffle(a) {
@@ -65,11 +77,39 @@ export default {
     axios.defaults.withCredentials = true;
     axios
       .get(
-        "http://localhost:8080/api/get_flights?end_date=2019-03-01&start_date=2019-02-24&budget=500&uuid=1&origin=MAD"
+        "/api/get_flights?end_date=2019-03-01&start_date=2019-02-24&budget=500&uuid=" + this.uuid + "&origin=MAD"
       )
       .then(response => {
         this.info = shuffle(response.data.flights);
       });
+  },
+  methods: {
+    like: function (side) {
+      var is_like;
+      if (side === "left") {
+        is_like = false
+      } else {
+        is_like = true
+      }
+
+      if (this.info.length > 0) {
+        var removed_entry = this.info.shift()
+        removed_entry.liked = is_like
+
+        axios
+        .post(
+            "/api/like_place", {
+            uuid: this.uuid,
+            like: is_like,
+            destination: removed_entry.destination,
+          }
+        )
+        .then(response => {
+          this.liked.push(removed_entry);
+        });
+      }
+
+    }
   }
   // data() {
   //   return {
