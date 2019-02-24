@@ -197,7 +197,8 @@ class FlightResource(Resource):
                 flight['image'] = image_url
                 del flight['type']
                 del flight['links']
-                result.append(flight)
+                if image_url != '':
+                    result.append(flight)
 
         for flight in result:
             flight['price']['passenger'] = float(flight['price']['total'])
@@ -280,7 +281,7 @@ class TicketResource(Resource):
         arguments['returnDate'] = request.args.get('returnDate')
 
         if request.args.get('num_passengers'):
-            num_passengers = request.args.get('num_passengers')
+            num_passengers = int(request.args.get('num_passengers'))
         else:
             num_passengers = 1
 
@@ -294,9 +295,11 @@ class TicketResource(Resource):
         extracted_flight_list = []
         for offer_item in flights['data']:
             flight_data = {}
-            flight_data['price_per_passenger'] = (float(offer_item['offerItems'][0]['price']['total']) + float(offer_item['offerItems'][0]['price']['totalTaxes']))
+            flight_data['price_per_passenger'] = float(offer_item['offerItems'][0]['price']['total']) + float(offer_item['offerItems'][0]['price']['totalTaxes'])
             flight_data['price_total'] = round(flight_data['price_per_passenger'] * num_passengers, 2)
-            
-            extracted_flight_list.append(price)
+
+            flight_data['layovers'] = len(offer_item['offerItems'][0]['services'][0]['segments']) - 1
+
+            extracted_flight_list.append(flight_data)
         print(extracted_flight_list)
         return extracted_flight_list, status_code
