@@ -7,7 +7,6 @@
         <span v-html="aircports-symbol"></span>
       </span>
     </div>
-
   </div>
 </template>
 
@@ -25,14 +24,6 @@ export default {
       errored: false
     }
   },
-  // filters: {
-  //   codefilter (value) {
-  //     return value.code
-  //   },
-  //   namefilter (value) {
-  //     return value.name
-  //   }
-  // },
   mounted () {
     axios.defaults.withCredentials = true;
     axios

@@ -17,7 +17,6 @@ export default {
     	Datepicker
   	},
   	format: "MM/DD/YYYY"
-
 }
 </script>
 

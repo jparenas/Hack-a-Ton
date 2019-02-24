@@ -12,23 +12,23 @@ body {
 }
 
 .head_title {
-	font-family: 'Coiny', cursive;;
-	font-size: 70px;
+	text-align: center;
+}
+
+.head_title h2 {
+	font-family: 'Coiny', cursive;
+	font-size: 90px;
 	font-size: Italick;
 	color: pink;
 	padding-top: 50px;
-	text-align: center;
-
 }
 
 .top-wrapper {
-  background-image: url(".././top.jpg");
+  background-image: url("../top.jpg");
   background-size: cover;
   height: 700px;
   margin: 0 auto;
 }
-
-
 
 .submit-all {
   font-size: 35px;
@@ -37,5 +37,15 @@ body {
   padding: 1em;
   border: 1px solid #CCC;
   border-radius: 1em;
+}
+
+.target_point {
+	border-radius: 4px;
+	cursor: pointer;
+
+}
+
+footer {
+	height: 200px;
 }
 

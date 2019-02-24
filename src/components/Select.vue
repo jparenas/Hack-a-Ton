@@ -1,9 +1,5 @@
-// forked from FumioNonaka's "Vue.js + ES6: Wrapper component using jQuery plugin Select2" http://jsdo.it/FumioNonaka/8v2v
-
-
 <template>
 </template>
-
 
 <script>
 export default {
@@ -30,8 +26,6 @@ export default {
 	}
 }
 
-// import * as statename from '../src/assets/states_titlecase.json';
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 // <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 // <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="../src/assets/airports.json"></script>
@@ -41,7 +35,6 @@ var vm = new Vue({
 	template: '#demo-template',
 	data: {
 		options:[
-
 		{id: "AL", text: 'Alabama'},
 		{id: "AK", text: 'Alaska'},
 		{id: "AZ", text: 'Arizona'}
@@ -52,6 +45,5 @@ document.addEventListener('DOMContentLoaded', (event) =>
 vm.$mount('#demo')
 );
 </script>
-
 <style>
 </style>

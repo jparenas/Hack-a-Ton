@@ -2,8 +2,6 @@
   margin-top: 10px
 }
 
-
-
 .airport {
   width: 150px;
   height: 40px;
@@ -30,7 +28,7 @@
 
 .info-submit {
   background-color: #dee7ec;
-  color: grey;
+  color: gray;
   opacity: 0.7;
   margin-top: 20px;
   width: 400px;
@@ -44,8 +42,4 @@
 
 .submit-button {
 	text-align: center;
-}
-
-.submit-button::value {
-  font-size: 15px;
 }
